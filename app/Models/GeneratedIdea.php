@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\GeneratedIdeaFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class GeneratedIdea extends Model
 {
+    /** @use HasFactory<GeneratedIdeaFactory> */
+    use HasFactory;
     /** @var list<string> */
     protected $fillable = [
         'generation_id',

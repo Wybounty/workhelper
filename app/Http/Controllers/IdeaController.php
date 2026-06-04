@@ -35,10 +35,13 @@ class IdeaController extends Controller
 
         $max = Occupation::max('id');
 
-        $occupation = Occupation::find(
-            random_int(1, $max)
-        );
-        //$occupation = Occupation::inRandomOrder()->first();
+        if (! $max) {
+            return redirect()
+                ->route('home')
+                ->with('error', 'Aucun métier trouvé. Importez d\'abord les occupations.');
+        }
+
+        $occupation = Occupation::find(random_int(1, $max));
 
         if (! $occupation) {
             return redirect()

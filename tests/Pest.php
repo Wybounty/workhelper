@@ -1,50 +1,117 @@
 <?php
 
+use App\Models\GeneratedIdea;
+use App\Models\IdeaGeneration;
+use App\Models\Occupation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind different classes or traits.
-|
-*/
-
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
-    ->in('Feature');
+    ->use(RefreshDatabase::class)
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
-| Expectations
+| Helpers
 |--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
+function occupationsJsonPath(): string
 {
-    // ..
+    return database_path('data/occupations.json');
+}
+
+/**
+ * @param  list<array{preferredLabel: string, description?: string|null}>  $occupations
+ */
+function writeOccupationsJsonFile(array $occupations): void
+{
+    $directory = database_path('data');
+
+    if (! is_dir($directory)) {
+        mkdir($directory, 0755, true);
+    }
+
+    file_put_contents(occupationsJsonPath(), json_encode($occupations, JSON_THROW_ON_ERROR));
+}
+
+function removeOccupationsJsonFile(): void
+{
+    $path = occupationsJsonPath();
+
+    if (file_exists($path)) {
+        unlink($path);
+    }
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function sampleProjectPayload(int $index = 1): array
+{
+    return [
+        'title' => "Projet test {$index}",
+        'application_type' => match ($index) {
+            1 => 'Web',
+            2 => 'Mobile',
+            default => 'Automatisation',
+        },
+        'description' => "Description du projet {$index}.",
+        'why_useful' => "Utile pour le métier — raison {$index}.",
+        'development_duration' => "{$index} mois",
+        'recommended_stack' => 'Laravel, Vue 3, Inertia',
+        'business_model' => 'Abonnement SaaS',
+        'estimated_monthly_revenue' => (string) (1500 * $index),
+    ];
+}
+
+/**
+ * @return list<array<string, mixed>>
+ */
+function sampleProjectsPayload(): array
+{
+    return [
+        sampleProjectPayload(1),
+        sampleProjectPayload(2),
+        sampleProjectPayload(3),
+    ];
+}
+
+function fakeN8nWebhookSuccess(?array $projects = null): void
+{
+    Http::fake([
+        config('services.n8n.webhook') => Http::response($projects ?? sampleProjectsPayload(), 200),
+    ]);
+}
+
+function fakeN8nWebhookFailure(): void
+{
+    Http::fake([
+        config('services.n8n.webhook') => Http::response(['error' => 'fail'], 500),
+    ]);
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function validPdfRequestPayload(?array $project = null): array
+{
+    return [
+        'project' => $project ?? sampleProjectPayload(),
+        'occupation_name' => 'Développeur web',
+        'occupation_description' => 'Description ESCO du métier.',
+    ];
+}
+
+function createGenerationWithIdeas(int $ideasCount = 3): IdeaGeneration
+{
+    $generation = IdeaGeneration::factory()->create();
+
+    GeneratedIdea::factory()
+        ->count($ideasCount)
+        ->for($generation, 'generation')
+        ->create();
+
+    return $generation->load('ideas');
 }
