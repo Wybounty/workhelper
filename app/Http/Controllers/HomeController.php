@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Occupation;
 use Inertia\Inertia;
-
-// Models
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-
-    //
-    public function index()
+    public function index(): Response
     {
-        return Inertia::render('Home');
-    }
+        $dataFile = database_path('data/occupations.json');
 
+        return Inertia::render('Home', [
+            'occupations_count' => Occupation::count(),
+            'esco_file' => [
+                'present' => file_exists($dataFile),
+                'name' => 'occupations.json',
+                'relative_path' => 'database/data/occupations.json',
+            ],
+        ]);
+    }
 }

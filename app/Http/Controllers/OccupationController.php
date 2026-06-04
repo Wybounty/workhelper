@@ -44,6 +44,10 @@ class OccupationController extends Controller
             );
         }
 
-        return redirect()->route('ideas.index')->with('success', 'Métiers importés avec succès');
+        $count = Occupation::count();
+
+        return redirect()
+            ->route('home')
+            ->with('success', "Intégration ESCO terminée. {$count} métiers disponibles dans la base.");
     }
 }
