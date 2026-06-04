@@ -2,6 +2,7 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import IdeaProjectGrid from '@/components/IdeaProjectGrid.vue';
+import type { Project } from '@/components/IdeaProjectGrid.vue';
 import Footer from '../../components/Footer.vue';
 
 interface Generation {
@@ -12,7 +13,7 @@ interface Generation {
     projects: Project[];
 }
 
-const props = defineProps<{
+defineProps<{
     generation: Generation;
 }>();
 
