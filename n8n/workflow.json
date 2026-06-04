@@ -34,7 +34,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={{ JSON.stringify({\n  model: \"google/gemma-4-e4b\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert SaaS et Product Manager.\n\nIMPORTANT :\n\nRetourne UNIQUEMENT un JSON valide.\n\nAucun texte avant.\nAucun texte après.\nAucun markdown.\n\nStructure obligatoire :\n\n[\n  {\n    \"occupation_name\": \"\",\n    \"occupation_description\": \"\",\n    \"title\": \"\",\n    \"application_type\": \"\",\n    \"description\": \"\",\n    \"why_useful\": \"\",\n    \"development_duration\": \"\",\n    \"recommended_stack\": \"\",\n    \"business_model\": \"\",\n    \"estimated_monthly_revenue\": \"\"\n  }\n]\n\nIMPORTANT :\n\n- Retourner exactement 3 objets dans le tableau.\n- Les 3 projets doivent être directement liés au métier fourni.\n- Les projets doivent résoudre de vrais problèmes rencontrés dans ce métier.\n- Les 3 idées doivent obligatoirement contenir exactement 1 projet Web, 1 projet Mobile et 1 projet Automatisation, sans aucun doublon de type d'application.- estimated_monthly_revenue doit être réaliste et en euros.\n- recommended_stack doit être moderne et cohérente.\n- Aucun objet imbriqué.\n- Aucun champ supplémentaire.\n- JSON valide uniquement.`\n    },\n    {\n      role: \"user\",\n      content: `Métier : ${$json.body.brief.job}\n\nDescription :\n${$json.body.brief.description}`\n    }\n  ],\n  temperature: 0.7,\n  max_tokens: 2000\n}) }}",
+        "body": "={{ JSON.stringify({\n  model: \"google/gemma-4-e4b\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert SaaS et Product Manager.\n\nIMPORTANT :\n\nRetourne UNIQUEMENT un JSON valide.\n\nAucun texte avant.\nAucun texte après.\nAucun markdown.\n\nStructure obligatoire :\n\n[\n  {\n    \"occupation_name\": \"\",\n    \"occupation_description\": \"\",\n    \"title\": \"\",\n    \"application_type\": \"\",\n    \"description\": \"\",\n    \"why_useful\": \"\",\n    \"development_duration\": \"\",\n    \"recommended_stack\": \"\",\n    \"business_model\": \"\",\n    \"estimated_monthly_revenue\": \"\"\n  }\n]\n\nIMPORTANT :\n\n- Retourner exactement 3 objets dans le tableau.\n- Les 3 projets doivent être directement liés au métier fourni.\n- Les projets doivent résoudre de vrais problèmes rencontrés dans ce métier.\n- Les 3 idées doivent obligatoirement contenir exactement 1 projet Web, 1 projet Mobile et 1 projet Automatisation, sans aucun doublon de type d'application.- estimated_monthly_revenue doit être réaliste et en euros avec le signe euro.\n- recommended_stack doit être moderne et cohérente.\n- Aucun objet imbriqué.\n- Aucun champ supplémentaire.\n- JSON valide uniquement.`\n    },\n    {\n      role: \"user\",\n      content: `Métier : ${$json.body.brief.name}\n\nDescription :\n${$json.body.brief.description}`\n    }\n  ],\n  temperature: 0.7,\n  max_tokens: 2000\n}) }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -93,7 +93,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "922002c2-af2f-4145-a36e-d5bc91114ac3",
+  "versionId": "fdc2696c-c117-48b5-9dc7-8d4f6f916cf2",
   "meta": {
     "instanceId": "99a647101811cdf85177646bf275114281335d7c57e2b92fd651e8fe9726fe29"
   },
