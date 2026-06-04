@@ -17,6 +17,10 @@ return [
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
+    
+        'n8n' => [
+        'webhook' => env('N8N_WEBHOOK_URL'),
+    ],
 
     'resend' => [
         'key' => env('RESEND_API_KEY'),

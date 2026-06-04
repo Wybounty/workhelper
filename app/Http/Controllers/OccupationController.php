@@ -11,7 +11,19 @@ class OccupationController extends Controller
     {
         $path = database_path('data/occupations.json');
 
+        if (! file_exists($path)) {
+            return redirect()
+                ->route('home')
+                ->with('error', 'Fichier occupations.json introuvable.');
+        }
+
         $occupations = json_decode(file_get_contents($path), true);
+
+        if (! is_array($occupations)) {
+            return redirect()
+                ->route('home')
+                ->with('error', 'Le fichier occupations.json est invalide.');
+        }
 
         $batch = [];
 

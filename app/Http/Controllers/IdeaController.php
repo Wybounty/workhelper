@@ -32,7 +32,13 @@ class IdeaController extends Controller
 
     public function generate(): RedirectResponse
     {
-        $occupation = Occupation::inRandomOrder()->first();
+
+        $max = Occupation::max('id');
+
+        $occupation = Occupation::find(
+            random_int(1, $max)
+        );
+        //$occupation = Occupation::inRandomOrder()->first();
 
         if (! $occupation) {
             return redirect()
@@ -41,7 +47,7 @@ class IdeaController extends Controller
         }
 
         $response = Http::timeout(120)->post(
-            'http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3',
+            config('services.n8n.webhook'),
             [
                 'brief' => [
                     'job' => $occupation->name,

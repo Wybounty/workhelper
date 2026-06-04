@@ -20,7 +20,9 @@ Le workflow fait le lien entre :
 - [Activer le workflow](#activer-le-workflow)
 - [Configurer LM Studio](#configurer-lm-studio)
 - [Télécharger et lancer Gemma](#télécharger-et-lancer-gemma)
-- [URLs et webhook](#urls-et-webhook)
+- [Récupérer l'URL du webhook](#récupérer-lurl-du-webhook)
+- [Connecter le webhook à Laravel](#connecter-le-webhook-à-laravel)
+- [URLs, modes test et production](#urls-modes-test-et-production)
 - [Données reçues (entrée)](#données-reçues-entrée)
 - [Données retournées (sortie)](#données-retournées-sortie)
 - [Alignement avec Laravel](#alignement-avec-laravel)
@@ -37,11 +39,13 @@ Le workflow fait le lien entre :
 | Fichier | `n8n/workflow.json` |
 | Nom du workflow | `WORKHELPER` |
 | Méthode webhook | `POST` |
-| ID webhook | `eaa872c1-1a47-493b-b4bd-7300d2bb0ba3` |
-| URL locale (production n8n) | `http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3` |
-| URL locale (mode test n8n) | `http://localhost:5678/webhook-test/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3` |
-| API IA | `http://127.0.0.1:1234/v1/chat/completions` |
-| Modèle configuré | `google/gemma-4-e4b` |
+| URL côté Laravel | Variable **`N8N_WEBHOOK_URL`** dans `.env` (non versionnée) |
+| Format d'URL production | `http://localhost:5678/webhook/{votre-id}` |
+| Format d'URL test (éditeur) | `http://localhost:5678/webhook-test/{votre-id}` |
+| API IA (dans le workflow) | `http://127.0.0.1:1234/v1/chat/completions` |
+| Modèle configuré (exemple) | `google/gemma-4-e4b` |
+
+> L'identifiant `{votre-id}` est **unique** à votre instance n8n. Le workflow fourni peut afficher `eaa872c1-1a47-493b-b4bd-7300d2bb0ba3` après import, mais vous devez toujours copier **l'URL affichée chez vous** dans Laravel.
 
 Le workflow contient **3 nœuds** :
 
@@ -135,8 +139,9 @@ Interface par défaut : **http://localhost:5678**
 
 4. Le workflow **WORKHELPER** apparaît avec les 3 nœuds connectés.
 5. **Enregistrez** le workflow (Ctrl+S).
+6. Passez à [Activer le workflow](#activer-le-workflow), puis [Connecter le webhook à Laravel](#connecter-le-webhook-à-laravel).
 
-> Après import, l'**ID du webhook** dans l'URL peut rester `eaa872c1-1a47-493b-b4bd-7300d2bb0ba3` (défini dans le fichier). Si n8n génère un nouvel ID, mettez à jour l'URL dans `app/Http/Controllers/IdeaController.php`.
+> Vous pouvez aussi créer **votre propre workflow** n8n : tant que le webhook accepte le JSON d'entrée Laravel et renvoie 3 idées au format attendu, WorkHelper fonctionnera avec votre URL.
 
 ---
 
@@ -144,26 +149,8 @@ Interface par défaut : **http://localhost:5678**
 
 1. Ouvrez le workflow **WORKHELPER**.
 2. Basculez le switch **Active** (en haut à droite) sur **ON**.
-3. Vérifiez que le nœud **Webhook** affiche l'URL de production :
-
-   ```
-   http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3
-   ```
-
-### Mode test vs production
-
-| Mode | URL | Usage |
-|------|-----|--------|
-| **Production** (workflow actif) | `/webhook/{id}` | Utilisé par Laravel en conditions réelles |
-| **Test** (bouton « Listen » sur le nœud) | `/webhook-test/{id}` | Débogage manuel dans l'éditeur n8n |
-
-Laravel est configuré pour l'URL **production** :
-
-```php
-'http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3'
-```
-
-Pour tester depuis l'éditeur n8n sans activer le workflow, utilisez temporairement l'URL **webhook-test** dans `IdeaController.php`.
+3. Ouvrez le nœud **Webhook** et copiez l'**URL de production** (voir section suivante).
+4. Collez cette URL dans le `.env` Laravel : `N8N_WEBHOOK_URL=...`
 
 ---
 
@@ -224,15 +211,132 @@ Si LM Studio affiche un autre identifiant (ex. `gemma-3-4b-it`), modifiez cette 
 
 ---
 
-## URLs et webhook
+## Récupérer l'URL du webhook
 
-### URL appelée par Laravel
+Cette étape est **indispensable** pour connecter n8n à WorkHelper.
+
+### Étapes dans l'interface n8n
+
+1. Ouvrez votre workflow (ex. **WORKHELPER**).
+2. Assurez-vous que le workflow est **Actif** (switch ON).
+3. Cliquez sur le nœud **Webhook**.
+4. Dans le panneau de droite, repérez l'URL de type :
+
+   **Production URL** (ou équivalent selon la version de n8n) :
+
+   ```
+   http://localhost:5678/webhook/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   ```
+
+5. Cliquez sur **Copier** ou sélectionnez l'URL en entier.
+
+### À quoi correspond chaque partie de l'URL ?
+
+| Segment | Signification |
+|---------|---------------|
+| `http://localhost:5678` | Adresse de votre instance n8n (à adapter si Docker / autre machine) |
+| `/webhook/` | Chemin **production** (workflow actif) |
+| `xxxxxxxx-...` | Identifiant unique du webhook (généré par n8n) |
+
+### Première installation ?
+
+Si vous venez d'importer `workflow.json`, l'ID peut correspondre à celui du fichier d'exemple (`eaa872c1-1a47-493b-b4bd-7300d2bb0ba3`). **Ne supposez pas** qu'il est identique sur toutes les machines : copiez toujours l'URL affichée dans **votre** n8n.
+
+---
+
+## Connecter le webhook à Laravel
+
+WorkHelper lit l'URL du webhook depuis le fichier **`.env`**, pas depuis le code source.
+
+### 1. Ouvrir le fichier `.env`
+
+À la racine du projet Laravel :
 
 ```
-POST http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3
+workhelper/.env
 ```
 
-Fichier source : `app/Http/Controllers/IdeaController.php`, méthode `generate()`.
+Si le fichier n'existe pas :
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+### 2. Renseigner la variable
+
+Ajoutez ou modifiez cette ligne en collant **votre** URL copiée depuis n8n :
+
+```env
+N8N_WEBHOOK_URL=http://localhost:5678/webhook/your-webhook-id
+```
+
+**Exemple réel** (à adapter) :
+
+```env
+N8N_WEBHOOK_URL=http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3
+```
+
+### 3. Recharger la configuration Laravel
+
+```bash
+php artisan config:clear
+```
+
+### 4. Vérifier que Laravel voit la bonne URL
+
+```bash
+php artisan tinker --execute="echo config('services.n8n.webhook');"
+```
+
+Le terminal doit afficher exactement la même URL que dans `.env`.
+
+### Chaîne technique (pour les curieux)
+
+```
+.env  →  N8N_WEBHOOK_URL
+         ↓
+config/services.php  →  config('services.n8n.webhook')
+         ↓
+IdeaController::generate()  →  Http::post(...)
+```
+
+### L'application sans webhook configuré
+
+| Fonctionnalité | Fonctionne sans `N8N_WEBHOOK_URL` ? |
+|----------------|-------------------------------------|
+| Accueil, import ESCO | Oui |
+| Historique des générations | Oui |
+| Export PDF (générations existantes) | Oui |
+| **Générer de nouvelles idées** | **Non** |
+
+### Pourquoi ne pas coder l'URL dans le dépôt ?
+
+- Chaque contributeur a sa propre instance n8n (port, Docker, ID différent).
+- Le fichier `.env` n'est **pas** commité sur GitHub (bonne pratique Laravel).
+- Vous pouvez utiliser le workflow fourni **ou** le vôtre sans modifier le code PHP.
+
+---
+
+## URLs, modes test et production
+
+### URL utilisée par Laravel en production
+
+Laravel envoie un `POST` vers la valeur de **`N8N_WEBHOOK_URL`** :
+
+```
+POST {N8N_WEBHOOK_URL}
+Content-Type: application/json
+```
+
+### Mode test vs production
+
+| Mode | Chemin URL | Quand l'utiliser |
+|------|------------|------------------|
+| **Production** | `/webhook/{id}` | Workflow **actif** — **à mettre dans `.env`** |
+| **Test** | `/webhook-test/{id}` | Bouton « Listen for test event » dans l'éditeur n8n uniquement |
+
+> Pour WorkHelper, configurez toujours **`N8N_WEBHOOK_URL`** avec l'URL **`/webhook/...`**, pas `/webhook-test/...`.
 
 ### Timeout
 
@@ -240,12 +344,12 @@ Laravel attend jusqu'à **120 secondes** (`Http::timeout(120)`). La première in
 
 ### Changer host ou port
 
-| Service | Défaut |
-|---------|--------|
-| n8n | `localhost:5678` |
-| LM Studio | `127.0.0.1:1234` |
+| Service | Défaut | Impact sur `.env` |
+|---------|--------|-------------------|
+| n8n | `localhost:5678` | Modifier le début de `N8N_WEBHOOK_URL` |
+| LM Studio | `127.0.0.1:1234` | Configuré dans le nœud HTTP Request du workflow (pas dans `.env`) |
 
-Docker n8n sur une autre machine : remplacez `localhost` par l'IP ou le nom du conteneur accessible depuis PHP.
+**Docker** : si n8n tourne dans un conteneur, utilisez l'host accessible depuis PHP (`host.docker.internal`, IP locale, etc.) dans `N8N_WEBHOOK_URL`.
 
 ---
 
@@ -271,9 +375,9 @@ Dans n8n, le corps est accessible via `$json.body` sur le nœud Webhook.
 
 ### Prompt utilisateur (nœud HTTP Request)
 
-Le workflow construit le message utilisateur à partir du métier. **Important** : le fichier `workflow.json` fourni référence historiquement `brief.name`. Laravel envoie **`brief.job`**.
+Le workflow construit le message utilisateur à partir du métier. Laravel envoie **`brief.job`** (et non `brief.name`).
 
-**Expression correcte à utiliser dans le nœud HTTP Request :**
+**Expression à utiliser dans le nœud HTTP Request :**
 
 ```javascript
 Métier : ${$json.body.brief.job}
@@ -342,7 +446,8 @@ Les champs `occupation_name` / `occupation_description` dans chaque objet IA son
 | Étape | Composant Laravel |
 |-------|-------------------|
 | Déclenchement | `GET /ideas/generate` |
-| Appel webhook | `IdeaController::generate()` |
+| Appel webhook | `IdeaController::generate()` via `config('services.n8n.webhook')` |
+| Configuration URL | `.env` → `N8N_WEBHOOK_URL` |
 | Persistance | `IdeaGenerationStore` |
 | Affichage | `GET /generations/{id}` |
 | PDF | `POST /ideas/pdf` |
@@ -359,8 +464,10 @@ Après succès :
 
 ### Avec curl (workflow actif)
 
+Remplacez l'URL par la valeur de votre `N8N_WEBHOOK_URL` :
+
 ```bash
-curl -X POST "http://localhost:5678/webhook/eaa872c1-1a47-493b-b4bd-7300d2bb0ba3" \
+curl -X POST "http://localhost:5678/webhook/your-webhook-id" \
   -H "Content-Type: application/json" \
   -d "{\"brief\":{\"job\":\"Conducteur de tramway\",\"description\":\"Opère un tramway en circulation régulière.\"}}"
 ```
@@ -388,9 +495,10 @@ php -r "json_decode(file_get_contents('php://stdin'), true, 512, JSON_THROW_ON_E
 
 | Cause probable | Solution |
 |----------------|----------|
+| `N8N_WEBHOOK_URL` vide ou absente | Renseignez `.env`, puis `php artisan config:clear` |
 | n8n arrêté | Lancez n8n, activez le workflow |
-| Mauvaise URL | Vérifiez `/webhook/` vs `/webhook-test/` |
-| Webhook ID différent après import | Copiez l'URL du nœud Webhook dans `IdeaController.php` |
+| Mauvaise URL | Utilisez `/webhook/` (production), pas `/webhook-test/` |
+| URL obsolète après réimport du workflow | Recopiez l'URL du nœud Webhook dans `.env` |
 | LM Studio arrêté | Démarrez le serveur local sur le port 1234 |
 | Modèle non chargé | Chargez Gemma avant l'appel |
 | Timeout 120s | Machine lente → réduire `max_tokens` ou utiliser un modèle plus petit |
@@ -432,7 +540,7 @@ connect ECONNREFUSED 127.0.0.1:1234
 | **Pas de streaming** | Réponse complète attendue avant traitement Laravel |
 | **Pas de file d'attente** | Un seul appel synchrone ; pas de gestion de charge intégrée |
 | **Prompt rigide** | Si le modèle ignore les consignes, le JSON peut être invalide |
-| **URL en dur** | Webhook et modèle sont codés dans le dépôt ; pas de variables `.env` côté n8n dans cette version |
+| **Webhook non versionné** | Chaque utilisateur doit configurer `N8N_WEBHOOK_URL` dans son `.env` |
 | **Pas d'authentification webhook** | Toute personne connaissant l'URL peut appeler le webhook en local |
 | **Champs occupation dans la réponse IA** | Redondants avec Laravel ; non requis pour la persistance |
 | **Modèle Gemma** | Nom exact variable selon la version LM Studio |
@@ -444,6 +552,8 @@ connect ECONNREFUSED 127.0.0.1:1234
 | Fichier | Rôle |
 |---------|------|
 | `n8n/workflow.json` | Export n8n à importer |
+| `.env` / `.env.example` | `N8N_WEBHOOK_URL` — URL du webhook |
+| `config/services.php` | Lecture de `N8N_WEBHOOK_URL` |
 | `app/Http/Controllers/IdeaController.php` | Client HTTP vers le webhook |
 | `app/Services/IdeaGenerationStore.php` | Sauvegarde des 3 idées |
 

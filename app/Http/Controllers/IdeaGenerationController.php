@@ -31,7 +31,7 @@ class IdeaGenerationController extends Controller
 
     public function show(IdeaGeneration $generation): Response
     {
-        $generation->load('ideas');
+        $generation->loadMissing('ideas');
 
         return Inertia::render('Generations/Show', [
             'generation' => [
