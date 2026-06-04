@@ -145,16 +145,17 @@ defineProps<{
                         v-for="(link, i) in generations.links"
                         :key="i"
                     >
-                        <Link
-                            v-if="link.url"
-                            :href="link.url"
-                            class="rounded-lg px-3 py-2 text-sm font-medium transition"
-                            :class="link.active
-                                ? 'bg-indigo-600 text-white shadow-sm'
-                                : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'"
-                            :preserve-scroll="true"
-                            v-html="link.label"
-                        />
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        class="rounded-lg px-3 py-2 text-sm font-medium transition"
+                        :class="link.active
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'"
+                        :preserve-scroll="true"
+                    >
+                        {{ link.label }}
+                    </Link>
                         <span
                             v-else
                             class="cursor-not-allowed rounded-lg px-3 py-2 text-sm font-medium text-slate-300"
