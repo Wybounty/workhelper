@@ -77,12 +77,6 @@ Le parcours utilisateur :
 | Détail d'une génération | `docs/screenshots/generation-show.png` |
 | Export PDF (aperçu) | `docs/screenshots/pdf-export.png` |
 
-```markdown
-![Accueil](docs/screenshots/home.png)
-![Historique](docs/screenshots/generations-index.png)
-![Détail génération](docs/screenshots/generation-show.png)
-```
-
 ---
 
 ## Stack technique
