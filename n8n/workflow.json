@@ -1,0 +1,102 @@
+{
+  "name": "WORKHELPER",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eaa872c1-1a47-493b-b4bd-7300d2bb0ba3",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        -64
+      ],
+      "id": "5922ab0c-7f18-443d-982f-6f0ac355a7c6",
+      "name": "Webhook",
+      "webhookId": "eaa872c1-1a47-493b-b4bd-7300d2bb0ba3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:1234/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({\n  model: \"google/gemma-4-e4b\",\n  messages: [\n    {\n      role: \"system\",\n      content: `Tu es un expert SaaS et Product Manager.\n\nIMPORTANT :\n\nRetourne UNIQUEMENT un JSON valide.\n\nAucun texte avant.\nAucun texte après.\nAucun markdown.\n\nStructure obligatoire :\n\n[\n  {\n    \"occupation_name\": \"\",\n    \"occupation_description\": \"\",\n    \"title\": \"\",\n    \"application_type\": \"\",\n    \"description\": \"\",\n    \"why_useful\": \"\",\n    \"development_duration\": \"\",\n    \"recommended_stack\": \"\",\n    \"business_model\": \"\",\n    \"estimated_monthly_revenue\": \"\"\n  }\n]\n\nIMPORTANT :\n\n- Retourner exactement 3 objets dans le tableau.\n- Les 3 projets doivent être directement liés au métier fourni.\n- Les projets doivent résoudre de vrais problèmes rencontrés dans ce métier.\n- Les 3 idées doivent obligatoirement contenir exactement 1 projet Web, 1 projet Mobile et 1 projet Automatisation, sans aucun doublon de type d'application.- estimated_monthly_revenue doit être réaliste et en euros.\n- recommended_stack doit être moderne et cohérente.\n- Aucun objet imbriqué.\n- Aucun champ supplémentaire.\n- JSON valide uniquement.`\n    },\n    {\n      role: \"user\",\n      content: `Métier : ${$json.body.brief.job}\n\nDescription :\n${$json.body.brief.description}`\n    }\n  ],\n  temperature: 0.7,\n  max_tokens: 2000\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "0d2da3c5-1059-4d72-945f-f70dd8922a0e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.choices[0].message.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "b42ee8e4-b9d5-45ea-a3f6-9ea03d2cdfdb",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "922002c2-af2f-4145-a36e-d5bc91114ac3",
+  "meta": {
+    "instanceId": "99a647101811cdf85177646bf275114281335d7c57e2b92fd651e8fe9726fe29"
+  },
+  "id": "j2I16JF8Qb1Fi9GJ",
+  "tags": []
+}
